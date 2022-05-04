@@ -74,14 +74,15 @@ namespace CoreHtmlToImage
         /// </summary>
         /// <param name="html">HTML string</param>
         /// <param name="width">Output document width</param>
+        /// <param name="height">Output document height</param>
         /// <param name="format">Output image format</param>
         /// <param name="quality">Output image quality 1-100</param>
         /// <returns></returns>
-        public byte[] FromHtmlString(string html, int width = 1024, ImageFormat format = ImageFormat.Jpg, int quality = 100)
+        public byte[] FromHtmlString(string html, int width = 1024, int? height = null, ImageFormat format = ImageFormat.Jpg, int quality = 100)
         {
             var filename = Path.Combine(directory, $"{Guid.NewGuid()}.html");
             File.WriteAllText(filename, html);
-            var bytes = FromUrl(filename, width, format, quality);
+            var bytes = FromUrl(filename, width, height, format, quality);
             File.Delete(filename);
             return bytes;
         }
@@ -94,20 +95,21 @@ namespace CoreHtmlToImage
         /// <param name="format">Output image format</param>
         /// <param name="quality">Output image quality 1-100</param>
         /// <returns></returns>
-        public byte[] FromUrl(string url, int width = 1024, ImageFormat format = ImageFormat.Jpg, int quality = 100)
+        public byte[] FromUrl(string url, int width = 1024, int? height = null, ImageFormat format = ImageFormat.Jpg, int quality = 100)
         {
             var imageFormat = format.ToString().ToLower();
             var filename = Path.Combine(directory, $"{Guid.NewGuid().ToString()}.{imageFormat}");
 
             string args;
+            var heightArg = height is null ? String.Empty : $"--height {height}";
 
             if (IsLocalPath(url))
             {
-                args = $"--quality {quality} --width {width} -f {imageFormat} \"{url}\" \"{filename}\"";
+                args = $"--quality {quality} --width {width} {heightArg} -f {imageFormat} \"{url}\" \"{filename}\"";
             }
             else
             {
-                args = $"--quality {quality} --width {width} -f {imageFormat} {url} \"{filename}\"";
+                args = $"--quality {quality} --width {width} {heightArg} -f {imageFormat} {url} \"{filename}\"";
             }
 
             Process process = Process.Start(new ProcessStartInfo(toolFilepath, args)
